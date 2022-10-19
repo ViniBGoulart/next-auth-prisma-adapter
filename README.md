@@ -1,34 +1,37 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## Environment Variables
 
-First, run the development server:
+To run this project, you will need to add the following environment variables to your .env file
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+* `DATABASE_URL`= planetscale main db url
+* `SHADOW_DATABASE_URL`= planetscale shadow db url
+* `GOOGLE_CLIENT_ID`= secret id google oauth
+* `GOOGLE_CLIENT_SECRET`= secret key google oauth
+* `NEXTAUTH_URL`= project url (in this case: http://localhost:3000)
+* `NEXTAUTH_SECRETE` = anything, just bang your head on the keyboard
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Example explication:
+## Prisma Schema
+Prisma schema must has: https://next-auth.js.org/adapters/prisma#setup
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Client
+Create prisma client in [src/lib/prismaClient.ts](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/lib/prismaClient.ts)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Api route
+Create next-auth api route in [/src/pages/api/auth/[...nextauth].ts](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/pages/api/auth/%5B...nextauth%5D.ts)
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+The key point is in the adapter: PrismaAdapter(prisma), which makes next-auth users go to our database
 
-## Learn More
+## Session provider
+Use next [session provider](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/pages/_app.tsx) to encompass the application, passing as a parameter the session which comes in the pageProps
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Create two pages, one for login and another that will only be accessed by authenticated users
+#### Login
+In [Login](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/pages/index.tsx) we using **signIn** next-auth function passing to params the google provider. we are also using next's ssr to check if the user who is trying to access the page already has a session, if true, redirect to the dashboard page.
+#### Dashboard
+In [Dashboard](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/pages/dashboard.tsx) we using **useSession** next-auth function to get user data and session status. We also create a button to signOut.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Middleware
+Create a [Middleware](https://github.com/ViniBGoulart/next-auth-prisma-adapter/blob/main/src/middleware.ts) to block access to pages by users who do not have a session.
